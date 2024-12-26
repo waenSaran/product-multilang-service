@@ -1,0 +1,3 @@
+export const PRODUCTS = {
+  REPOSITORY: 'PRODUCTS_REPOSITORY',
+};
