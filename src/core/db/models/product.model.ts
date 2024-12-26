@@ -8,6 +8,6 @@ export class Product extends Model {
   @Column({ primaryKey: true })
   code: string;
 
-  @Column
+  @Column({ field: 'base_name' })
   baseName: string;
 }

@@ -28,7 +28,12 @@ export class ProductsService {
   }
 
   findAll() {
-    return `This action returns all product`;
+    try {
+      return this.productRepository.findAll();
+    } catch (error) {
+      console.log(error);
+      return error;
+    }
   }
 
   findOne(id: number) {
