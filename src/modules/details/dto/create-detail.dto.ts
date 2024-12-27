@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Detail } from '../types/detail';
+import { CreateProductDto } from 'src/modules/products/dto/create-products.dto';
+import { ValidateNested } from 'class-validator';
 
 export class UpsertDetailDto implements Detail {
   @ApiProperty({
@@ -21,4 +23,23 @@ export class UpsertDetailDto implements Detail {
     description: 'Product description in the specified language',
   })
   description?: string;
+}
+
+export class CreateProductWithTranslationsDto extends CreateProductDto {
+  @ApiProperty({
+    description: 'Product name translations',
+  })
+  @ApiProperty({
+    description: 'Product translations',
+    default: [
+      {
+        langCode: 'en',
+        name: 'product name',
+        description: 'product description',
+      },
+    ],
+    type: [UpsertDetailDto],
+  })
+  @ValidateNested({ each: true })
+  translations: UpsertDetailDto[];
 }
