@@ -10,14 +10,15 @@ import {
 import { DetailsService } from './details.service';
 import { CreateDetailDto } from './dto/create-detail.dto';
 import { UpdateDetailDto } from './dto/update-detail.dto';
+import { FindDetailParams } from './dto/find-detail.dto';
 
 @Controller('details')
 export class DetailsController {
   constructor(private readonly detailsService: DetailsService) {}
 
   @Post()
-  create(@Body() createDetailDto: CreateDetailDto) {
-    return this.detailsService.create(createDetailDto);
+  upsert(@Body() createDetailDto: CreateDetailDto) {
+    return this.detailsService.upsert(createDetailDto);
   }
 
   @Get()
@@ -25,9 +26,10 @@ export class DetailsController {
     return this.detailsService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.detailsService.findOne(+id);
+  @Get(':langCode/:productCode')
+  findOne(@Param() params: FindDetailParams) {
+    const { langCode, productCode } = params;
+    return this.detailsService.findOne(productCode, langCode);
   }
 
   @Patch(':id')

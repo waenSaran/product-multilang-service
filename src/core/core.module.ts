@@ -5,5 +5,6 @@ import { DbModule } from './db/db.module';
 @Module({
   imports: [ConfigModule, DbModule],
   exports: [ConfigModule, DbModule],
+  providers: [],
 })
 export class CoreModule {}

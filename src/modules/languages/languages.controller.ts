@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  HttpCode,
 } from '@nestjs/common';
 import { LanguagesService } from './languages.service';
 import { CreateLanguageDto } from './dto/create-language.dto';
@@ -16,8 +17,10 @@ export class LanguagesController {
   constructor(private readonly languagesService: LanguagesService) {}
 
   @Post()
-  create(@Body() createLanguageDto: CreateLanguageDto) {
-    return this.languagesService.create(createLanguageDto);
+  @HttpCode(201)
+  @HttpCode(200)
+  upsert(@Body() createLanguageDto: CreateLanguageDto) {
+    return this.languagesService.upsert(createLanguageDto);
   }
 
   @Get()
@@ -27,7 +30,7 @@ export class LanguagesController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.languagesService.findOne(+id);
+    return this.languagesService.findOne(id);
   }
 
   @Patch(':id')

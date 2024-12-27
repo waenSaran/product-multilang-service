@@ -6,9 +6,10 @@ import {
   Patch,
   Param,
   Delete,
+  HttpCode,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
-import { CreateProductDto } from './dto/create-products.dto';
+import { CreateProductWithTranslationsDto } from './dto/create-products.dto';
 import { UpdateProductDto } from './dto/update-products.dto';
 
 @Controller('product')
@@ -16,18 +17,20 @@ export class ProductsController {
   constructor(private readonly productService: ProductsService) {}
 
   @Post()
-  create(@Body() createProductDto: CreateProductDto) {
-    return this.productService.create(createProductDto);
+  @HttpCode(201)
+  create(@Body() createProductDto: CreateProductWithTranslationsDto) {
+    return this.productService.createWithTranslations(createProductDto);
   }
 
   @Get()
+  @HttpCode(200)
   findAll() {
     return this.productService.findAll();
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.productService.findOne(+id);
+    return this.productService.findOne(id);
   }
 
   @Patch(':id')

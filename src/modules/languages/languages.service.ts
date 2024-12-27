@@ -1,20 +1,63 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateLanguageDto } from './dto/create-language.dto';
 import { UpdateLanguageDto } from './dto/update-language.dto';
+import { LANGUAGE } from 'src/constants/language.constant';
+import { Language } from 'src/core/db/models/language.model';
 
 @Injectable()
 export class LanguagesService {
-  create(createLanguageDto: CreateLanguageDto) {
-    console.log('createLanguageDto', createLanguageDto);
-    return 'This action adds a new language';
+  constructor(
+    @Inject(LANGUAGE.REPOSITORY)
+    private readonly languageRepository: typeof Language,
+  ) {}
+  async upsert(data: CreateLanguageDto) {
+    try {
+      Logger.log(
+        JSON.stringify(data),
+        'LanguagesService:create - Start upsert language',
+      );
+      const result = await this.languageRepository.upsert<Language>({
+        ...data,
+      });
+      if (!result || !result[0].code) {
+        Logger.error(JSON.stringify(result), 'LanguagesService:create');
+        throw new InternalServerErrorException(
+          result,
+          'Error upserting language',
+        );
+      }
+      return result[0];
+    } catch (error) {
+      Logger.error(JSON.stringify(error), 'LanguagesService:create');
+      throw new InternalServerErrorException(error, 'Error upserting language');
+    }
   }
 
   findAll() {
     return `This action returns all languages`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} language`;
+  async findOne(id: string) {
+    try {
+      Logger.log(id, 'LanguagesService:findOne - Start find language');
+      const result = await this.languageRepository.findOne<Language>({
+        where: { code: id },
+      });
+      if (!result || !result.code) {
+        Logger.error(result, 'LanguagesService:findOne');
+        throw new NotFoundException(result, `Language ${id} not found`);
+      }
+      return result;
+    } catch (error) {
+      Logger.error(error, 'LanguagesService:findOne');
+      throw new InternalServerErrorException(error, 'Error finding language');
+    }
   }
 
   update(id: number, updateLanguageDto: UpdateLanguageDto) {
