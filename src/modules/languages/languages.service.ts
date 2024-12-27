@@ -1,9 +1,10 @@
 import {
+  HttpException,
+  HttpStatus,
   Inject,
   Injectable,
   InternalServerErrorException,
   Logger,
-  NotFoundException,
 } from '@nestjs/common';
 import { CreateLanguageDto } from './dto/create-language.dto';
 import { UpdateLanguageDto } from './dto/update-language.dto';
@@ -50,12 +51,25 @@ export class LanguagesService {
         where: { code: id },
       });
       if (!result || !result.code) {
-        Logger.error(result, 'LanguagesService:findOne');
-        throw new NotFoundException(result, `Language ${id} not found`);
+        Logger.error(
+          JSON.stringify({ result: result }),
+          'LanguagesService:findOne',
+        );
+        throw new HttpException(
+          {
+            status: HttpStatus.NOT_FOUND,
+            message: `Language ${id} not found`,
+            error: result,
+          },
+          HttpStatus.NOT_FOUND,
+        );
       }
       return result;
     } catch (error) {
-      Logger.error(error, 'LanguagesService:findOne');
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      Logger.error(JSON.stringify(error), 'LanguagesService:findOne');
       throw new InternalServerErrorException(error, 'Error finding language');
     }
   }

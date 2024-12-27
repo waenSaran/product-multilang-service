@@ -20,18 +20,18 @@ export class FilterDetailParams {
     default: 'en',
     required: false
   })
-  langCode: string;
+  langCode?: string;
 
   @ApiProperty({
     required: false
   })
-  name: string;
+  name?: string;
 
   @ApiProperty({
     description: 'Product description',
     required: false
   })
-  desc: string;
+  desc?: string;
 
   @ApiProperty({
     description: 'Page number',
@@ -39,7 +39,7 @@ export class FilterDetailParams {
     default: 0
   })
   @IsNumberString()
-  p: string;
+  p?: string | number;
 
   @ApiProperty({
     description: 'Number of items per page',
@@ -47,5 +47,5 @@ export class FilterDetailParams {
     default: 10
   })
   @IsNumberString()
-  l: string;
+  l?: string | number;
 }

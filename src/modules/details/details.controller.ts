@@ -12,8 +12,10 @@ import { DetailsService } from './details.service';
 import { CreateProductWithTranslationsDto } from './dto/create-detail.dto';
 import { UpdateDetailDto } from './dto/update-detail.dto';
 import { FilterDetailParams, FindDetailParams } from './dto/find-detail.dto';
+import { ApiTags } from '@nestjs/swagger';
 
-@Controller('details')
+@ApiTags('Translations')
+@Controller('translations')
 export class DetailsController {
   constructor(private readonly detailsService: DetailsService) {}
 
