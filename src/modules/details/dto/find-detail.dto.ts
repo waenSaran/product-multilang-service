@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumberString, IsString } from 'class-validator';
 
 export class FindDetailParams {
   @ApiProperty()
@@ -28,7 +28,24 @@ export class FilterDetailParams {
   name: string;
 
   @ApiProperty({
+    description: 'Product description',
     required: false
   })
-  description: string;
+  desc: string;
+
+  @ApiProperty({
+    description: 'Page number',
+    required: false,
+    default: 0
+  })
+  @IsNumberString()
+  p: string;
+
+  @ApiProperty({
+    description: 'Number of items per page',
+    required: false,
+    default: 10
+  })
+  @IsNumberString()
+  l: string;
 }

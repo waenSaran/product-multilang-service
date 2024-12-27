@@ -16,6 +16,8 @@ import { ProductsService } from '../products/products.service';
 import { LanguagesService } from '../languages/languages.service';
 import { FilterDetailParams } from './dto/find-detail.dto';
 import { Op } from 'sequelize';
+import { Detail } from './types/detail';
+import { Pagination } from './types/pagination';
 
 @Injectable()
 export class DetailsService {
@@ -26,18 +28,18 @@ export class DetailsService {
     private readonly languageService: LanguagesService,
   ) {}
 
-  errorHandling(type: HttpStatus, message: string, error: any) {
+  errorHandling(code: HttpStatus, message: string, error: any) {
     Logger.error(
-      JSON.stringify({ type, error }),
+      JSON.stringify({ type: code, error }),
       'DetailsService:errorHandling',
     );
     throw new HttpException(
       {
-        status: type,
+        status: code,
         message,
         error,
       },
-      type,
+      code,
       {
         cause: error,
       },
@@ -126,31 +128,40 @@ export class DetailsService {
     }
   }
 
-  async findAllWithFilter(query: FilterDetailParams): Promise<ProductDetail[]> {
+  async findAllWithFilter(query: FilterDetailParams): Promise<Pagination<Detail>> {
     Logger.log(
       JSON.stringify(query),
       'DetailsService:findAllWithFilter - Start finding all details',
     );
     try {
-      return await this.detailRepository.findAll({
-        where: {
-          ...query,
-          ...(query.name
-            ? {
-                name: {
-                  [Op.iLike]: `%${query.name}%`,
-                },
-              }
-            : {}),
-          ...(query.description
-            ? {
-                description: {
-                  [Op.iLike]: `%${query.description}%`,
-                },
-              }
-            : {}),
-        },
-      });
+      const offset = Number(query.p ) * Number(query.l) || 0;
+      const limit = Number(query.l) || 10;
+      const filter = {
+        langCode: query.langCode,
+        name: query.name,
+        description: query.desc
+      }
+      const result = await this.detailRepository.findAndCountAll(
+        {
+          where: {
+            ...(filter.langCode && { langCode: filter.langCode }),
+            ...(filter.name && { name: { [Op.iLike]: `%${filter.name}%` } }),
+            ...(filter.description && { description: { [Op.iLike]: `%${filter.description}%` } }),
+          },
+          limit,
+          offset,
+          order: [
+            ['langCode', 'ASC'],
+            ['name', 'ASC'],
+          ]
+        }
+      );
+      return {
+        page: Number(query.p) || 0,
+        limit,
+        total: result.count,
+        data: result.rows
+      }
     } catch (error) {
       this.errorHandling(
         HttpStatus.INTERNAL_SERVER_ERROR,
