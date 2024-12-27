@@ -45,7 +45,7 @@ export class LanguagesService {
 
   async findOne(id: string) {
     try {
-      Logger.log(id, 'LanguagesService:findOne - Start find language');
+      Logger.log(`Start find language: ${id}`, 'LanguagesService:findOne');
       const result = await this.languageRepository.findOne<Language>({
         where: { code: id },
       });

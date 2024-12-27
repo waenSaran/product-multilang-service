@@ -1,18 +1,11 @@
-import { CreateDetailDto } from 'src/modules/details/dto/create-detail.dto';
-import { IsArray, IsNotEmpty, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsNotEmpty } from 'class-validator';
 import { Product } from '../types/product';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateProductDto implements Partial<Product> {
+  @ApiProperty({
+    description: 'Product name',
+  })
   @IsNotEmpty()
   baseName: string;
-}
-export class CreateProductWithTranslationsDto {
-  @IsNotEmpty()
-  baseName: string;
-
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateDetailDto)
-  translations: CreateDetailDto[];
 }

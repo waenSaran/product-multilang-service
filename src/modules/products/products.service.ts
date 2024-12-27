@@ -1,15 +1,13 @@
 import {
   BadRequestException,
+  HttpException,
   Inject,
   Injectable,
   InternalServerErrorException,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import {
-  CreateProductDto,
-  CreateProductWithTranslationsDto,
-} from './dto/create-products.dto';
+import { CreateProductDto } from './dto/create-products.dto';
 import { UpdateProductDto } from './dto/update-products.dto';
 import { PRODUCTS } from 'src/constants/product.constant';
 import { Product } from 'src/core/db/models/product.model';
@@ -47,39 +45,6 @@ export class ProductsService {
     }
   }
 
-  async createWithTranslations(data: CreateProductWithTranslationsDto) {
-    Logger.log(
-      JSON.stringify(data),
-      'product-service:create - Creating product with translations',
-    );
-    try {
-      await this.create({ baseName: data.baseName });
-      const product = await this.productRepository.findOne<Product>({
-        where: { baseName: data.baseName },
-      });
-      if (!product || !product.code) {
-        Logger.error(JSON.stringify(product), 'product-service:create');
-        throw new BadRequestException(product, 'Error creating product');
-      }
-
-      // for (const translation of data.translations) {
-      //   const result = await this.productRepository.createDetail({
-      //     ...translation,
-      //     productId: product.code,
-      //   });
-      //   if (!result || !result.code) {
-      //     Logger.error(JSON.stringify(result), 'product-service:create');
-      //     throw new BadRequestException(result, 'Error creating product translation');
-      //   }
-      // }
-
-      // return result;
-    } catch (error) {
-      Logger.error(JSON.stringify(error), 'product-service:create');
-      throw new InternalServerErrorException(error, 'Error creating product');
-    }
-  }
-
   findAll() {
     try {
       return this.productRepository.findAll();
@@ -91,7 +56,10 @@ export class ProductsService {
 
   async findOne(id: string) {
     try {
-      Logger.log(id, 'product-service:findOne - Start find product');
+      Logger.log(
+        `Start finding product code: ${id}`,
+        'product-service:findOne',
+      );
       const result = await this.productRepository.findOne<Product>({
         where: { code: id },
       });
@@ -101,8 +69,11 @@ export class ProductsService {
       }
       return result;
     } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
       Logger.error(error, 'product-service:findOne');
-      throw new InternalServerErrorException(error, 'Error finding product');
+      throw new HttpException(error, 500);
     }
   }
 

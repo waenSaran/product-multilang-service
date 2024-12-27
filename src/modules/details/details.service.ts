@@ -5,7 +5,7 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
-import { CreateDetailDto } from './dto/create-detail.dto';
+import { UpsertDetailDto } from './dto/create-detail.dto';
 import { UpdateDetailDto } from './dto/update-detail.dto';
 import { DETAILS } from 'src/constants/details.constant';
 import { ProductDetail } from 'src/core/db/models/product-detail.model';
@@ -39,7 +39,7 @@ export class DetailsService {
     );
   }
 
-  async upsert(data: CreateDetailDto): Promise<ProductDetail> {
+  async upsert(data: UpsertDetailDto): Promise<ProductDetail> {
     Logger.log(
       JSON.stringify(data),
       'DetailsService:create - Starting upsert detail',
@@ -73,7 +73,14 @@ export class DetailsService {
       }
       return result[0];
     } catch (error) {
-      throw error;
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.errorHandling(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Error upserting detail',
+        error,
+      );
     }
   }
 
@@ -107,7 +114,14 @@ export class DetailsService {
       }
       return result;
     } catch (error) {
-      throw error;
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.errorHandling(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Error finding detail',
+        error,
+      );
     }
   }
 

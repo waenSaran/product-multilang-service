@@ -9,8 +9,8 @@ import {
   HttpCode,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
-import { CreateProductWithTranslationsDto } from './dto/create-products.dto';
 import { UpdateProductDto } from './dto/update-products.dto';
+import { CreateProductDto } from './dto/create-products.dto';
 
 @Controller('product')
 export class ProductsController {
@@ -18,8 +18,8 @@ export class ProductsController {
 
   @Post()
   @HttpCode(201)
-  create(@Body() createProductDto: CreateProductWithTranslationsDto) {
-    return this.productService.createWithTranslations(createProductDto);
+  create(@Body() createProductDto: CreateProductDto) {
+    return this.productService.create(createProductDto);
   }
 
   @Get()
