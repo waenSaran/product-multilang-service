@@ -48,7 +48,7 @@ export class DetailsService {
 
   async createProductWithTranslations(
     data: CreateProductWithTranslationsDto,
-  ): Promise<ProductDetail[]> {
+  ): Promise<{ results: ProductDetail[]; failures: any[] }> {
     const context = 'product-service:createWithTranslations';
     Logger.log('Start creating product with translations', context);
     try {
@@ -65,16 +65,23 @@ export class DetailsService {
           });
         }),
       ).then((res) => {
-        let results: ProductDetail[] = [];
+        const results: ProductDetail[] = [];
+        const failures: any[] = [];
         res.forEach((result) => {
           if (result.status === 'rejected') {
-            Logger.error(result.reason, context);
-            throw new HttpException(result.reason, HttpStatus.BAD_REQUEST);
+            failures.push({ error: result.reason });
+          } else {
+            results.push(result.value);
+            Logger.log(
+              JSON.stringify(result.value),
+              context + ' created detail',
+            );
           }
-          results.push(result.value);
-          Logger.log(JSON.stringify(result.value), context + ' created detail');
         });
-        return results;
+        return {
+          results,
+          failures,
+        };
       });
       return allResult;
     } catch (error) {
@@ -105,7 +112,20 @@ export class DetailsService {
           language,
         );
       }
-      const result = await this.detailRepository.upsert<ProductDetail>({
+      const existingTranslation = await this.detailRepository.findOne({
+        where: {
+          productCode: data.productCode,
+          langCode: data.langCode,
+        },
+      });
+      if (existingTranslation) {
+        this.errorHandling(
+          HttpStatus.CONFLICT,
+          `Translation for product: ${data.productCode} and language: ${data.langCode} already exists, Please update instead`,
+          existingTranslation,
+        );
+      }
+      const result = await this.detailRepository.create<ProductDetail>({
         ...data,
       });
       if (!result) {
@@ -128,46 +148,50 @@ export class DetailsService {
     }
   }
 
-  async findAllWithFilter(query: FilterDetailParams): Promise<Pagination<Detail>> {
+  async findAllWithFilter(
+    query: FilterDetailParams,
+  ): Promise<Pagination<Detail>> {
     Logger.log(
       JSON.stringify(query),
       'DetailsService:findAllWithFilter - Start finding all details',
     );
     try {
-      const offset = Number(query.p ) * Number(query.l) || 0;
+      const offset = Number(query.p) * Number(query.l) || 0;
       const limit = Number(query.l) || 10;
       const filter = {
         langCode: query.langCode,
         name: query.name,
-        description: query.desc
-      }
-      const result = await this.detailRepository.findAndCountAll(
-        {
-          where: {
-            ...(filter.langCode && { langCode: filter.langCode }),
-            ...(filter.name && { name: { [Op.iLike]: `%${filter.name}%` } }),
-            ...(filter.description && { description: { [Op.iLike]: `%${filter.description}%` } }),
-          },
-          limit,
-          offset,
-          order: [
-            ['langCode', 'ASC'],
-            ['name', 'ASC'],
-          ]
-        }
-      );
+        description: query.desc,
+      };
+      const result = await this.detailRepository.findAndCountAll({
+        where: {
+          ...(filter.langCode && { langCode: filter.langCode }),
+          ...(filter.name && { name: { [Op.iLike]: `%${filter.name}%` } }),
+          ...(filter.description && {
+            description: { [Op.iLike]: `%${filter.description}%` },
+          }),
+        },
+        limit,
+        offset,
+        order: [
+          ['langCode', 'ASC'],
+          ['name', 'ASC'],
+        ],
+      });
       return {
         page: Number(query.p) || 0,
         limit,
         total: result.count,
-        data: result.rows
-      }
+        data: result.rows,
+      };
     } catch (error) {
-      this.errorHandling(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        'Error finding all details',
-        error,
-      );
+      Logger.error(JSON.stringify(error), 'DetailsService:findAllWithFilter');
+      return {
+        page: 0,
+        limit: 10,
+        total: 0,
+        data: [],
+      };
     }
   }
 
