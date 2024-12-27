@@ -1,4 +1,4 @@
-import { CreateDetailDto } from 'src/app/details/dto/create-detail.dto';
+import { CreateDetailDto } from 'src/modules/details/dto/create-detail.dto';
 import { IsArray, IsNotEmpty, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
