@@ -11,7 +11,7 @@ import {
 } from './dto/create-detail.dto';
 import { UpdateDetailDto } from './dto/update-detail.dto';
 import { DETAILS } from 'src/constants/details.constant';
-import { ProductDetail } from 'src/core/db/models/product-detail.model';
+import { Translation } from 'src/core/db/models/product-detail.model';
 import { ProductsService } from '../products/products.service';
 import { LanguagesService } from '../languages/languages.service';
 import { FilterDetailParams } from './dto/find-detail.dto';
@@ -23,7 +23,7 @@ import { Pagination } from './types/pagination';
 export class DetailsService {
   constructor(
     @Inject(DETAILS.REPOSITORY)
-    private readonly detailRepository: typeof ProductDetail,
+    private readonly detailRepository: typeof Translation,
     private readonly productsService: ProductsService,
     private readonly languageService: LanguagesService,
   ) {}
@@ -48,16 +48,18 @@ export class DetailsService {
 
   async createProductWithTranslations(
     data: CreateProductWithTranslationsDto,
-  ): Promise<{ results: ProductDetail[]; failures: any[] }> {
+  ): Promise<any> {
     const context = 'product-service:createWithTranslations';
     Logger.log('Start creating product with translations', context);
     try {
-      const productResult = await this.productsService.create(data);
+      const productResult = await this.productsService.create({
+        baseName: data.baseName,
+      });
       Logger.log(JSON.stringify(productResult), context);
 
       const allResult = Promise.allSettled(
         data.translations.map(async (translation) => {
-          return await this.upsert({
+          return await this.create({
             productCode: productResult.code,
             langCode: translation.langCode,
             name: translation.name,
@@ -65,22 +67,27 @@ export class DetailsService {
           });
         }),
       ).then((res) => {
-        const results: ProductDetail[] = [];
+        let successCount = 0;
         const failures: any[] = [];
         res.forEach((result) => {
           if (result.status === 'rejected') {
-            failures.push({ error: result.reason });
+            failures.push({
+              error:
+                result.reason?.response?.error ??
+                result.reason?.response ??
+                result.reason,
+            });
           } else {
-            results.push(result.value);
-            Logger.log(
-              JSON.stringify(result.value),
-              context + ' created detail',
-            );
+            successCount += 1;
           }
         });
         return {
-          results,
-          failures,
+          productCode: productResult.code,
+          productBaseName: productResult.baseName,
+          total: res.length,
+          success: successCount,
+          failures: failures.length,
+          errors: failures,
         };
       });
       return allResult;
@@ -90,7 +97,7 @@ export class DetailsService {
     }
   }
 
-  async upsert(data: UpsertDetailDto): Promise<ProductDetail> {
+  async create(data: UpsertDetailDto): Promise<Translation> {
     Logger.log(
       JSON.stringify(data),
       'DetailsService:create - Starting upsert detail',
@@ -125,7 +132,7 @@ export class DetailsService {
           existingTranslation,
         );
       }
-      const result = await this.detailRepository.create<ProductDetail>({
+      const result = await this.detailRepository.create<Translation>({
         ...data,
       });
       if (!result) {
@@ -201,7 +208,7 @@ export class DetailsService {
       'DetailsService:findOne - Start finding detail',
     );
     try {
-      const result = await this.detailRepository.findOne<ProductDetail>({
+      const result = await this.detailRepository.findOne<Translation>({
         where: { productCode, langCode },
       });
       if (!result || !result.productCode || !result.langCode) {

@@ -3,13 +3,14 @@ import { Detail } from '../types/detail';
 import { CreateProductDto } from 'src/modules/products/dto/create-products.dto';
 import { IsNotEmpty, ValidateNested } from 'class-validator';
 
-export class UpsertDetailDto implements Detail {
+export class UpsertDetailDto implements Partial<Detail> {
   @ApiProperty({
     description: 'Product code (uuid)',
   })
-  productCode: string;
+  productCode?: string;
 
   @ApiProperty({
+    required: true,
     description: 'Language code (ISO 639-1)',
   })
   langCode: string;
@@ -17,7 +18,7 @@ export class UpsertDetailDto implements Detail {
   @ApiProperty({
     description: 'Product name in the specified language',
   })
-  name: string;
+  name?: string;
 
   @ApiProperty({
     description: 'Product description in the specified language',

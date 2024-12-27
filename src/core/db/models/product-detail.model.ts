@@ -3,10 +3,10 @@ import { Product } from './product.model';
 import { Language } from './language.model';
 
 @Table({
-  tableName: 'details',
+  tableName: 'translations',
   timestamps: false,
 })
-export class ProductDetail extends Model {
+export class Translation extends Model {
   @ForeignKey(() => Product)
   @Column({ primaryKey: true, field: 'product_code' })
   productCode: string;
