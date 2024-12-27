@@ -6,24 +6,27 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { DetailsService } from './details.service';
-import { UpsertDetailDto } from './dto/create-detail.dto';
+import { CreateProductWithTranslationsDto } from './dto/create-detail.dto';
 import { UpdateDetailDto } from './dto/update-detail.dto';
-import { FindDetailParams } from './dto/find-detail.dto';
+import { FilterDetailParams, FindDetailParams } from './dto/find-detail.dto';
 
 @Controller('details')
 export class DetailsController {
   constructor(private readonly detailsService: DetailsService) {}
 
   @Post()
-  upsert(@Body() payload: UpsertDetailDto) {
-    return this.detailsService.upsert(payload);
+  createProductWithTranslations(
+    @Body() payload: CreateProductWithTranslationsDto,
+  ) {
+    return this.detailsService.createProductWithTranslations(payload);
   }
 
   @Get()
-  findAll() {
-    return this.detailsService.findAll();
+  findAllWithFilter(@Query() query:FilterDetailParams) {
+    return this.detailsService.findAllWithFilter(query);
   }
 
   @Get(':langCode/:productCode')

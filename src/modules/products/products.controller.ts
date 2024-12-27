@@ -16,12 +16,6 @@ import { CreateProductDto } from './dto/create-products.dto';
 export class ProductsController {
   constructor(private readonly productService: ProductsService) {}
 
-  @Post()
-  @HttpCode(201)
-  create(@Body() createProductDto: CreateProductDto) {
-    return this.productService.create(createProductDto);
-  }
-
   @Get()
   @HttpCode(200)
   findAll() {
@@ -31,6 +25,12 @@ export class ProductsController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.productService.findOne(id);
+  }
+
+  @Post()
+  @HttpCode(201)
+  create(@Body() createProductDto: CreateProductDto) {
+    return this.productService.create(createProductDto);
   }
 
   @Patch(':id')
